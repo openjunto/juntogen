@@ -46,7 +46,7 @@ The Claude plugin host enforces this contract — files that do not meet it are 
 
 ### 1. cycle skill — `skills/cycle/SKILL.md`
 
-**Purpose**: Execute the autonomous backlog cycle — read context, load backlog, triage, plan stakeholder engagement, execute, test, commit, update backlog, retrospect, store artifacts, notify.
+**Purpose**: Execute the autonomous backlog cycle as a multi-item loop within a single invocation — read context, then repeatedly (a) load backlog and select the highest-priority unblocked item, (b) triage, (c) plan stakeholder engagement, (d) execute, (e) test, (f) commit with per-item clean-tree verification, (g) update backlog, (h) brief per-item retrospective — re-entering the loop on the next highest-priority unblocked item until a budget/safety gate trips. Each iteration commits atomically per item; the loop never advances to a new item with a dirty working tree. At end of invocation, store artifacts, run a per-invocation dev-mode feedback write, and notify.
 
 **YAML frontmatter** (verbatim):
 ```yaml
@@ -62,7 +62,8 @@ description: Execute the autonomous backlog cycle — triage, delegate, review, 
 - Execution-model branches: Simple (inline perspective rotation), Moderate (3-phase Task tool engagement), Complex (parallel team via Convene primitive, with teardown via the platform's team-disposal call — `shutdown_request` to each teammate then TeamDelete on the team handle)
 - PERSPECTIVE block format reproduced verbatim
 - Dev-mode feedback step invoking `oj-helper feedback-path` with the timestamped feedback-file format
-- Constraints section: one backlog item per cycle, atomic commits, stop on blocking review, ask when blocked
+- Constraints section: multi-item loop semantics with a per-iteration single-item scope (one item per loop iteration, NOT one item per cycle invocation); atomic per-item commits with Step-7a clean-tree gate BEFORE the loop advances; stop on blocking review; ask when blocked; explicit budget/safety-gate stop conditions (token/context budget low, next item triages Complex, irreversible / one-way-door action required, user-only decision reached) — the runner surfaces control to the user when any of these trip
+- Cycle-vs-run-task asymmetry directive: the cycle skill LOOPS over multiple items per invocation under the budget/safety-gate stop; the run-task skill does NOT loop — it executes exactly one item per invocation. Generators MUST NOT copy cycle-skill multi-item language into run-task, and MUST NOT copy run-task single-invocation language into cycle. Loop & Stop Conditions belong only in the cycle skill body.
 
 Cross-references must use `${CLAUDE_PLUGIN_ROOT}/agents/index.md`, `${CLAUDE_PLUGIN_ROOT}/reference/stakeholder-guide.md`, `${CLAUDE_PLUGIN_ROOT}/agents/*-compact.md` (flat plugin layout — NOT `agents/compact/*`).
 
@@ -109,7 +110,7 @@ description: Execute a single backlog item end-to-end through the 5-phase task l
 - Phase 4 — Deliver: Test, commit (no Co-Authored-By lines, no AI attribution), git-status verification gate, update backlog (issue-tracker or BACKLOG.md mode)
 - Phase 5 — Learn: Retrospective, dev-mode feedback path via `oj-helper feedback-path`, artifacts to `.claude/artifacts/`, notify user
 
-Constraints section reproduces the cycle-skill constraints with the addition: issue tracker failures are non-blocking.
+Constraints section (stated INDEPENDENTLY of the cycle skill — do NOT reuse cycle-skill multi-item loop language here): exactly one backlog item per invocation (run-task does NOT loop); atomic commits; do not proceed past blocking peer review; stop and ask when blocked or uncertain; issue tracker failures are non-blocking. Reentry on the next item requires a fresh user invocation of run-task.
 
 Cross-references use `${CLAUDE_PLUGIN_ROOT}/reference/workflow-stages.md`, `${CLAUDE_PLUGIN_ROOT}/reference/stakeholder-guide.md`, `.claude/CLAUDE.md` (the user's project-local manager protocol).
 

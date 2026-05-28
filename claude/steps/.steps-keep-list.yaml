@@ -129,13 +129,13 @@ keep_list:
     reason: "teardown-binding"
     note: "Convene primitive teardown call sequence (shutdown_request → TeamDelete) — platform-fact reference describing the literal Claude Code tool used to dispose a team. Parallel to the M16 §3 capability-schema exemption pattern."
   - file: "step-06-commands.md"
-    line: 77
+    line: 78
     term: "SubagentStart"
     match_kind: "literal"
     reason: "teardown-binding"
     note: "health-check skill frontmatter description: 'SubagentStart hook wiring' — the skill's stated diagnostic surface. Platform-fact reference identifying the hook contract under test."
   - file: "step-06-commands.md"
-    line: 89
+    line: 90
     term: "SubagentStart"
     match_kind: "literal"
     reason: "teardown-binding"
