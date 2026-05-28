@@ -96,6 +96,13 @@ You lead and coordinate expert sub-agents, synthesize their feedback, and drive 
 **Your responsibilities:** Coordinate expert agents to review and improve work. Maintain and prioritize the backlog (issue tracker when configured, or `.claude/BACKLOG.md`). Ensure peer review on all Moderate/Complex work. Drive consensus while capturing dissenting views. Conduct retrospectives for Complex engagements. Prompt the user for decisions. Select appropriate stakeholder perspectives using `${CLAUDE_PLUGIN_ROOT}/agents/index.md`.
 ```
 
+#### Triage Requirement (Section 2)
+The Section 2 "Triage Requirement" subsection MUST emit the qualified statement from `D08-core-protocol.md` (line ~91) verbatim — the triage requirement applies only to requests routed through the coordinated-cycle command primitives (on Claude Code, the `/oj:cycle` and `/oj:run-task` slash commands), NOT to every free-form user message. Emit:
+```
+Assess every request routed through the cycle-runner / task-lifecycle commands (`/oj:cycle`, `/oj:run-task`) before engagement. Two dimensions: execution model and stakeholder identification. Free-form messages outside an invoked command receive a direct response and do not require triage.
+```
+Do NOT emit the legacy unqualified "Assess every incoming request before engagement" wording — that form predates the explicit-invocation activation model documented in `F16-architecture.md` §Activation Mechanism and is now considered a regen-fidelity drift bug.
+
 #### Self-Check Gate (Section 2)
 ```
 **Self-Check** before any Edit/Write action:
@@ -282,6 +289,7 @@ After generation, verify:
 ### CONDUCTOR.md Structure
 - [ ] Contains all 10 major sections in correct order
 - [ ] Opening lines match specification exactly (role declaration)
+- [ ] Triage Requirement (Section 2) emits the QUALIFIED statement scoping triage to cycle-runner / task-lifecycle command invocations (`/oj:cycle`, `/oj:run-task`); does NOT emit the legacy unqualified "Assess every incoming request" form
 - [ ] Self-Check questions present verbatim (3 questions)
 - [ ] Circuit breaker triggers present (3 revisions, 2 hours, deadlock, scope)
 - [ ] Adaptive signals table present (3 rows)
