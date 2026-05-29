@@ -220,8 +220,20 @@ Immediately after the anchor line (with one blank line between), emit a fenced c
 - Moderate Tier: **6 items**
 - Complex Tier: **9 items**
 
-#### Model Selection Table (Section 7)
-Three models with exact when-to-use criteria and examples. **[EXTERNAL]** — render from `platform-snapshot.yaml` `models` section rather than hardcoding model names and cost ratios. The symbolic ids (`haiku`, `sonnet`, `opus`) and their tier mappings (`routine`, `implementation`, `reasoning`) are platform facts from Layer 0. The human-readable when-to-use descriptions and task examples are [DERIVED] from Chain 7 (capability-cost optimization) and may be authored inline.
+#### Model Selection Section (Section 7)
+Three models with exact when-to-use criteria and examples. **[EXTERNAL]** — render the tier table from `platform-snapshot.yaml` `models` section rather than hardcoding model names and cost ratios. The symbolic ids (`haiku`, `sonnet`, `opus`) and their tier mappings (`routine`, `implementation`, `reasoning`) are platform facts from Layer 0. The human-readable when-to-use descriptions and task examples are [DERIVED] from Chain 7 (capability-cost optimization) and may be authored inline.
+
+After the tier table and "When in doubt" guidance, the generator MUST also emit the **function-first selection rules** and the **per-role default model table** specified in `juntospec/D32-execution-models.md` §6 (the canonical source). Render both with the concrete model ids resolved against `platform-snapshot.yaml` (substitute `{tier-routine}` → `haiku`, `{tier-implementation}` → `sonnet`, `{tier-reasoning}` → `opus`). Required structure:
+
+1. **Function-first selection rules** (subsection under `### Model Selection`): emit the 5 bullets from D32 §6 § Function-First Selection Rules, with abstract tier tokens replaced by their concrete model ids:
+   - Adversarial reviewer slot (any role) → strongest tier (always wins over role default).
+   - Complex-tier lead implementer → strongest tier.
+   - Moderate-tier lead implementer → implementation tier by default; escalate to reasoning tier when implementation is high-risk or carries unresolved TENSION.
+   - Phase-1 stakeholder analysts → implementation tier; routine tier for bounded/docs-only lenses.
+   - Specialists on a domain trigger → implementation tier; escalate to reasoning tier when their domain is the decisive risk (security, reliability, destructive data).
+2. **Per-role default table** (subsection under `### Model Selection`): emit the role→tier mapping from D32 §6 § Per-Role Default Tier with concrete model ids. Three rows: strongest tier (Distinguished Engineer, Security Engineer, Site Reliability Engineer, Engineering Consultant); implementation tier (Software Engineer, Solutions Architect, DevOps Engineer, Test Engineer, Data Architect, Data Scientist, ML Engineer, Enterprise Architect, Business Analyst, Product Manager, Executive Leadership Coach); routine tier (Technical Writer — with the documented escalation when user-facing prose is the deliverable). Frame the table explicitly as **adjustable defaults**; the function rules (reviewer-slot override etc.) always win.
+3. **Worked-example anchor**: emit a one-line back-pointer to `${CLAUDE_PLUGIN_ROOT}/reference/worked-examples.md` Example 2, noting that the analysts-on-`sonnet` / reviewer-on-`opus` split there is the general pattern.
+4. **Effort out-of-scope note** (subsection): emit a short paragraph explaining that per-expert effort is not a controllable parameter today — expert profiles are injected into `general-purpose` Task spawns via the `SubagentStart` hook (`oj-helper inject-profile`), the Task tool does NOT read `${CLAUDE_PLUGIN_ROOT}/agents/*.md` as subagent definitions (so frontmatter on those files is a no-op), and there is no per-invocation effort knob on that spawn surface. Effort is session-level (the user's `/effort` setting). Per-expert effort tiering would require re-architecting experts as native, distinct subagent types — defer.
 
 #### Tier-Aware Context Loading Table (Section 9)
 Three tiers with exact loading instructions.
@@ -311,6 +323,7 @@ After generation, verify:
 - [ ] Both handback formats present (Simple compressed + Moderate/Complex full)
 - [ ] Quality gate counts correct: Simple (2), Moderate (6), Complex (9)
 - [ ] Model selection table present with entries matching `platform-snapshot.yaml` model roster (verify symbolic ids, tiers, and cost ratios — do not hardcode haiku/sonnet/opus as pass criteria)
+- [ ] Model Selection section includes function-first selection rules (5 bullets: reviewer-slot, Complex lead, Moderate lead, Phase-1 analysts, specialists), per-role default model table (3 tiers covering Distinguished Engineer through Technical Writer), worked-example back-pointer to `reference/worked-examples.md` Example 2, and an effort-out-of-scope note explaining that per-expert effort is not controllable today (Task tool does not read `agents/*.md` frontmatter; effort is session-level)
 - [ ] Tier-aware context loading table present (3 tiers)
 - [ ] Reference files table present (8 files)
 - [ ] Templates table present (5 templates)
