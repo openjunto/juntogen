@@ -78,6 +78,37 @@ jobs:
           fi
           echo "OK: oj-claude tree present at ${GITHUB_WORKSPACE}/oj-claude"
 
+      - name: Sibling-checkout openjunto/juntospec (default-branch HEAD)
+        # tier-a-assertions (and regen-acceptance, which spawns tier-a) scan
+        # the juntospec spec corpus (D*.md/F*.md/M*.md + platform-contract.yaml)
+        # for §13–§16 hygiene assertions. structural-diff does NOT need it.
+        # Lands at ${GITHUB_WORKSPACE}/juntospec — both the documented
+        # OJ_SPEC_DIR mechanism (set per-step below) and tier-a's relative
+        # sibling probe (<scripts>/../../../../juntospec) point here.
+        # NO continue-on-error — same treatment as the oj-claude checkout:
+        # let actions/checkout fail loud on network/auth, and let the guard
+        # step below fail loud on a wrong-shape tree.
+        uses: actions/checkout@v4
+        with:
+          repository: openjunto/juntospec
+          path: juntospec
+
+      - name: Guard sibling juntospec checkout
+        # Fail loud if the checked-out juntospec tree is missing the canonical
+        # spec-corpus manifest. Mirrors the oj-claude plugin.json guard: a
+        # missing/private juntospec fails clearly here instead of with a
+        # confusing exit-2 deep in tier-a's corpus-root resolution. NO
+        # continue-on-error: this guard is the gate.
+        run: |
+          set -euo pipefail
+          if [ ! -f "${GITHUB_WORKSPACE}/juntospec/platform-contract.yaml" ]; then
+            echo "ERROR: sibling checkout of openjunto/juntospec did not yield a spec corpus" >&2
+            echo "       (missing ${GITHUB_WORKSPACE}/juntospec/platform-contract.yaml)" >&2
+            echo "       Check the sibling-checkout step output above for actions/checkout errors." >&2
+            exit 1
+          fi
+          echo "OK: juntospec corpus present at ${GITHUB_WORKSPACE}/juntospec"
+
       - name: Setup Node (for npm install of claude CLI)
         uses: actions/setup-node@v4
         with:
@@ -105,6 +136,12 @@ jobs:
 
       - name: Run tier-a-assertions against oj-claude
         # Expected: 19 passed / 0 failed.
+        # OJ_SPEC_DIR is the documented, explicit corpus-root mechanism
+        # (tier-a resolution order: $OJ_SPEC_DIR > sibling probe > hard-fail).
+        # Setting it explicitly is more robust than relying on the relative
+        # sibling probe; the juntospec checkout above lands the corpus here.
+        env:
+          OJ_SPEC_DIR: ${{ github.workspace }}/juntospec
         run: bash "${GITHUB_WORKSPACE}/juntogen/claude/validation/scripts/tier-a-assertions.sh" "${GITHUB_WORKSPACE}/oj-claude"
 
       - name: Run regen-acceptance against oj-claude
@@ -113,4 +150,9 @@ jobs:
         # ${OUTPUT_DIR}/scripts/. Treating the pre-generated oj-claude
         # tree as OUTPUT_DIR exercises the same path-coupling guard the
         # acceptance gate uses on a fresh regen tree.
+        # OJ_SPEC_DIR is set here too: regen-acceptance spawns tier-a as a
+        # child process, which inherits this step env. Same documented
+        # explicit corpus-root mechanism as the tier-a step above.
+        env:
+          OJ_SPEC_DIR: ${{ github.workspace }}/juntospec
         run: bash "${GITHUB_WORKSPACE}/juntogen/claude/validation/scripts/regen-acceptance.sh" "${GITHUB_WORKSPACE}/oj-claude"
