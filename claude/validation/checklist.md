@@ -429,7 +429,7 @@ Count verification:
 - [ ] `attribution` object with empty `commit` and `pr` fields
 
 ### Environment Variables
-- [ ] `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`
+- [ ] `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` (preferred; enables the Convene substrate. When unset, Complex tier degrades to the Convene→Consult fallback per Axiom 8 — the install is still valid, but adopters should be aware the Complex branch will exercise the fallback path rather than TeamCreate. `oj-helper agent-teams-check` reports availability.)
 - [ ] `CLAUDE_CODE_ENABLE_UNIFIED_READ_TOOL=1`
 - [ ] `CLAUDE_CODE_EXPERIMENTAL_ADAPTIVE_THINKING=1`
 

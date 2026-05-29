@@ -162,7 +162,7 @@ cat /tmp/banner.err   # → OpenJunto v<version> active — OpenJunto coordinati
 
 **Preconditions**:
 - Claude Code session active with OpenJunto loaded
-- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` environment variable set
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` environment variable set (this test exercises the Convene path; for the Convene→Consult fallback path, see Test 5b below)
 
 **Steps**:
 1. Submit request: "Migrate authentication system from session-based to JWT"
@@ -179,7 +179,9 @@ cat /tmp/banner.err   # → OpenJunto v<version> active — OpenJunto coordinati
 
 **Team Formation**:
 - [ ] Manager reads all reference files (8 core + enterprise overlay if present)
-- [ ] Manager uses `TeamCreate` tool to spawn team
+- [ ] Manager invokes `oj-helper agent-teams-check` and parses `.available` from JSON
+- [ ] When `.available == true`: manager uses `TeamCreate` tool to spawn team (proceed with rest of this section)
+- [ ] When `.available == false`: manager follows the Convene→Consult fallback (see Test 5b); the rest of this section's TeamCreate-specific assertions do NOT apply and MUST NOT be flagged as failures
 - [ ] Team includes coordinator agent + stakeholder agents
 - [ ] Coordinator is general-purpose (not domain expert)
 - [ ] Team size: 3-5 teammates (per spec target)
@@ -216,6 +218,43 @@ cat /tmp/banner.err   # → OpenJunto v<version> active — OpenJunto coordinati
 - [ ] Manager calls `TeamDelete` after all teammates shut down
 
 **Pass Criteria**: Manager triages correctly (4 criteria or mandatory trigger), creates team, coordinator manages task graph, parallel execution with declarative dependencies, all 9 quality gates checked, structured shutdown with retrospective.
+
+---
+
+## Test 5b: Complex Tier Flow — Convene→Consult Fallback (Axiom 8)
+
+**Preconditions**:
+- Claude Code session active with OpenJunto loaded
+- `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` environment variable **unset** (explicitly probe with `unset CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` before launching the session)
+
+**Steps**:
+1. Submit the same request as Test 5
+2. Observe manager's triage decision
+3. Observe execution path selection
+
+**Expected Results**:
+
+**Capability Probe**:
+- [ ] Manager (or the cycle/run-task skill) invokes `oj-helper agent-teams-check`
+- [ ] Probe exits 0 (Axiom 8: never block on the probe itself)
+- [ ] Probe stdout JSON: `.available == false`, `.reason == "env_unset"`
+
+**Triage**:
+- [ ] Manager still triages Complex (4 criteria or mandatory trigger) — fallback is execution-substrate degradation, NOT tier downshift
+
+**Fallback Execution**:
+- [ ] Manager does NOT invoke `TeamCreate`, `TeamDelete`, `shutdown_request`, or `SendMessage` (these tools are unavailable; calling them would error)
+- [ ] Manager spawns ONE general-purpose deputy coordinator via the Task tool, briefed with the full stakeholder plan
+- [ ] Deputy spawns stakeholder analyses as parallel Task-tool calls
+- [ ] Synthesis is handback-only (no inter-agent peer messaging)
+
+**Quality Gates Preserved**:
+- [ ] User Checkpoint fires (Complex-tier mandatory; "Should we proceed?")
+- [ ] Pre-mortem documents ≥3 scenarios
+- [ ] Adversarial review present
+- [ ] Retrospective conducted
+
+**Pass Criteria**: Probe reports `available:false` + exit 0; manager selects fallback path; Complex quality gates preserved; no TeamCreate/TeamDelete/SendMessage calls attempted.
 
 ---
 

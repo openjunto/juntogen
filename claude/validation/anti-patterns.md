@@ -279,11 +279,12 @@ Check for:
 
 **Symptom 3: Complex Tier Using Task Tool Instead of TeamCreate**
 
-Complex tier should use TeamCreate for parallel team formation. If CLAUDE.md shows Complex tier using sequential Task tool spawns (Moderate pattern), tier is confused.
+Complex tier should use TeamCreate for parallel team formation **when the agent-teams capability is available** (the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` substrate that binds the Convene primitive on Claude Code). If CLAUDE.md shows Complex tier using sequential Task tool spawns (the Moderate phased pattern) AND the documented Convene→Consult fallback is absent, tier is confused — the Complex Quality Gates (pre-mortem with ≥3 scenarios, adversarial review, User Checkpoint) are being skipped because the skill silently fell through to the Moderate execution model.
 
 Check CLAUDE.md "Complex: Parallel Team (Swarm)" section:
 - ✅ "Team Formation: `TeamCreate` → spawn coordinator + stakeholder agents"
-- ❌ "Phase 1 — Stakeholder Analysis: Spawn agents via Task tool"
+- ✅ Documented **Fallback** clause (Axiom 8): when agent-teams unavailable, degrade to a deputy-coordinator parallel-Task-tool fan-out (one general-purpose deputy briefed with the full stakeholder plan; fans out parallel stakeholder Task-tool calls; handback-only synthesis; no SendMessage / Inform). User Checkpoint + pre-mortem + adversarial review remain mandatory.
+- ❌ "Phase 1 — Stakeholder Analysis: Spawn agents via Task tool" **with no deputy coordinator and no User Checkpoint** (this is the bare Moderate pattern leaking into Complex — the Convene→Consult fallback explicitly keeps the deputy coordinator and the Complex quality gates; their absence is the tier-confusion signal, not the use of Task tool itself).
 
 **Symptom 4: Profile Tier-Specific Behavior Table Missing or Wrong**
 
