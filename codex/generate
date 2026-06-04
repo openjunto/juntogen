@@ -200,7 +200,20 @@ build_prompt() {
         suffix=" The Codex platform-defaults.yaml is at ${SCRIPT_DIR}/platform-defaults.yaml."
         [ -f "${OUTPUT_DIR}/platform-declaration.yaml" ] && suffix=" A platform-declaration.yaml exists — use declaration mode.${suffix}"
     fi
-    printf 'Execute the following generation prompt. Write all output files to the current working directory (%s). Plugin-internal path token is ${CODEX_PLUGIN_ROOT}.%s\n\n%s' "${OUTPUT_DIR}" "${suffix}" "${content}"
+    # Many source prompts point at the Claude generator's prompts/specs, which are
+    # dense with Claude-platform vocabulary. Without an explicit conversion contract the
+    # engine leaves residue (haiku/sonnet/opus, "Task tool", "TeamCreate", "CLAUDE.md").
+    # This mandatory replacement table applies to EVERY step's output.
+    local repl='MANDATORY GLOBAL CONVERSION — source prompts reference the Claude Code platform. Convert EVERY occurrence in your generated output to the Codex binding; leave ZERO Claude-platform literals:
+- "Task tool" / "spawn via the Task tool" -> a Codex subagent (defined at ${CODEX_PLUGIN_ROOT}/.codex/agents/<role>.toml; spawned via /agent or auto-orchestration)
+- "TeamCreate" / team formation / "swarm" -> parallel Codex subagents (Codex waits for all and returns a consolidated response)
+- "SendMessage" / peer relay / inter-agent "Inform" -> NOT available on Codex; synthesis is handback-only
+- model ids: haiku -> gpt-5.4-mini, sonnet -> gpt-5.3-codex, opus -> gpt-5.5 (and effort: routine=low, implementation=medium, reasoning=high, adversarial-reviewer=xhigh)
+- "CLAUDE.md" (manager protocol) -> "CONDUCTOR.md"; "~/.claude/" -> "~/.codex/"; "${CLAUDE_PLUGIN_ROOT}" -> "${CODEX_PLUGIN_ROOT}"; "claude plugin" install flow -> "codex plugin"
+- "Claude Code" (the product/CLI) -> "Codex CLI"
+KEEP unchanged (valid on Codex): the hook names "SessionStart" and "SubagentStart"; the abstract primitives Consult/Convene/Inform/Onboard.
+After writing each file, RE-READ it and delete any remaining haiku/sonnet/opus, "Task tool", "TeamCreate", "SendMessage", "CLAUDE.md", "~/.claude/", or "${CLAUDE_PLUGIN_ROOT}" literal.'
+    printf 'Execute the following generation prompt. Write all output files to the current working directory (%s). Plugin-internal path token is ${CODEX_PLUGIN_ROOT}.%s\n\n%s\n\n%s' "${OUTPUT_DIR}" "${suffix}" "${repl}" "${content}"
 }
 
 # ── sentinels ────────────────────────────────────────────────────────────────
