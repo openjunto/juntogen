@@ -226,11 +226,12 @@ run_step() {
 
     log_file="${SENTINEL_DIR}/logs/step-${step}.log"; mkdir -p "${SENTINEL_DIR}/logs"
     local rc=0
+    # stdin from /dev/null: claude -p has no TTY here and would otherwise wait on stdin.
     if use_bare_mode; then
-        ( cd "${OUTPUT_DIR}" && claude --bare -p "$(cat "${ptmp}")" --model "${MODEL}" --dangerously-skip-permissions --max-turns "${mt}" ) >"${log_file}" 2>&1 || rc=$?
+        ( cd "${OUTPUT_DIR}" && IS_SANDBOX=1 claude --bare -p "$(cat "${ptmp}")" --model "${MODEL}" --dangerously-skip-permissions --max-turns "${mt}" </dev/null ) >"${log_file}" 2>&1 || rc=$?
     else
-        ( cd "${OUTPUT_DIR}" && claude -p "$(cat "${ptmp}")" --model "${MODEL}" --dangerously-skip-permissions --max-turns "${mt}" \
-            --append-system-prompt "${GENERATION_MODE_PROMPT}" --settings '{"disableAllHooks":true}' --disable-slash-commands ) >"${log_file}" 2>&1 || rc=$?
+        ( cd "${OUTPUT_DIR}" && IS_SANDBOX=1 claude -p "$(cat "${ptmp}")" --model "${MODEL}" --dangerously-skip-permissions --max-turns "${mt}" \
+            --append-system-prompt "${GENERATION_MODE_PROMPT}" --settings '{"disableAllHooks":true}' --disable-slash-commands </dev/null ) >"${log_file}" 2>&1 || rc=$?
     fi
     rm -f "${ptmp}"
     [ $rc -eq 0 ] || { log_error "  claude exited ${rc} (log: ${log_file})"; tail -5 "${log_file}" 2>/dev/null | sed 's/^/    /'; return 2; }
@@ -258,6 +259,13 @@ main() {
     if [ "${DRY_RUN}" != "true" ]; then
         command -v claude >/dev/null 2>&1 || die "claude CLI not found (engine)"
         command -v jq >/dev/null 2>&1 || log_warn "jq not found — static manifest emit (step-07) will fail"
+        # Root container: claude refuses --dangerously-skip-permissions as root unless
+        # IS_SANDBOX=1 exactly. The ambient value may be unset (background tasks) or a
+        # non-"1" string (e.g. "yes"), so force "1" when root. Ephemeral generation sandbox.
+        if [ "$(id -u 2>/dev/null)" = "0" ]; then
+            export IS_SANDBOX=1
+            log_warn "running as root — forced IS_SANDBOX=1 for claude --dangerously-skip-permissions (sandboxed/ephemeral env)"
+        fi
     fi
     local steps; steps=$(compute_steps)
     log_info "Steps: ${steps}"
