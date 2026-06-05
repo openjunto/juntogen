@@ -7,7 +7,7 @@ Adaptation of `/path/to/juntogen/claude/steps/step-11-org-scaffold.md`. Independ
 - `/path/to/juntospec/D80-org-coordination.md` — multi-repo coordination topology.
 
 ## Codex substitutions
-- `${CLAUDE_PLUGIN_ROOT}` → `${CODEX_PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/`.
+- `${CLAUDE_PLUGIN_ROOT}` → `${PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/`.
 - Any command/skill invocation references use the Codex idiom (see step-06).
 
 ## Output

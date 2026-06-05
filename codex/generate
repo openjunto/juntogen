@@ -159,7 +159,8 @@ verify_step() {
             done < <(find "${d}/skills" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f 2>/dev/null | sort)
             [ "${found}" -gt 0 ] || { log_error "step06: no skills/*/SKILL.md"; ok=1; } ;;
         07) _chk_file "${d}/bin/oj-helper" || ok=1; _chk_file "${d}/bin/lib/contracts.sh" || ok=1
-            _chk_file "${d}/.codex-plugin/plugin.json" || ok=1; _chk_file "${d}/hooks/hooks.json" || ok=1 ;;
+            _chk_file "${d}/.codex-plugin/plugin.json" || ok=1; _chk_file "${d}/hooks/hooks.json" || ok=1
+            _chk_file "${d}/bootstrap.sh" || ok=1 ;;
         10) _chk_file "${d}/README.md" || ok=1; _chk_file "${d}/WHY.md" || ok=1 ;;
         11) _chk_file "${d}/CONDUCTOR.md" || ok=1 ;;
         *) log_warn "no verify for step ${step}" ;;
@@ -180,7 +181,8 @@ static_emit() {
     emit_hooks_json "${OUTPUT_DIR}" >/dev/null
     emit_contracts_sh "${OUTPUT_DIR}" >/dev/null
     emit_platform_defaults "${OUTPUT_DIR}" >/dev/null
-    log_ok "  Static manifests emitted (.codex-plugin/, hooks/hooks.json, contracts.sh, platform-defaults.yaml)"
+    emit_bootstrap "${OUTPUT_DIR}" >/dev/null
+    log_ok "  Static manifests emitted (.codex-plugin/, hooks/hooks.json, contracts.sh, platform-defaults.yaml, bootstrap.sh)"
 }
 
 # ── prompt build ─────────────────────────────────────────────────────────────
@@ -205,15 +207,16 @@ build_prompt() {
     # engine leaves residue (haiku/sonnet/opus, "Task tool", "TeamCreate", "CLAUDE.md").
     # This mandatory replacement table applies to EVERY step's output.
     local repl='MANDATORY GLOBAL CONVERSION — source prompts reference the Claude Code platform. Convert EVERY occurrence in your generated output to the Codex binding; leave ZERO Claude-platform literals:
-- "Task tool" / "spawn via the Task tool" -> a Codex subagent (defined at ${CODEX_PLUGIN_ROOT}/.codex/agents/<role>.toml; spawned via /agent or auto-orchestration)
+- "Task tool" / "spawn via the Task tool" -> a Codex subagent (defined at ${PLUGIN_ROOT}/.codex/agents/<role>.toml; spawned via /agent or auto-orchestration)
 - "TeamCreate" / team formation / "swarm" -> parallel Codex subagents (Codex waits for all and returns a consolidated response)
 - "SendMessage" / peer relay / inter-agent "Inform" -> NOT available on Codex; synthesis is handback-only
 - model ids: haiku -> gpt-5.4-mini, sonnet -> gpt-5.3-codex, opus -> gpt-5.5 (and effort: routine=low, implementation=medium, reasoning=high, adversarial-reviewer=xhigh)
-- "CLAUDE.md" (manager protocol) -> "CONDUCTOR.md"; "~/.claude/" -> "~/.codex/"; "${CLAUDE_PLUGIN_ROOT}" -> "${CODEX_PLUGIN_ROOT}"; "claude plugin" install flow -> "codex plugin"
+- "CLAUDE.md" (manager protocol) -> "CONDUCTOR.md"; "~/.claude/" -> "~/.codex/"; "${CLAUDE_PLUGIN_ROOT}" -> "${PLUGIN_ROOT}"; "claude plugin" install flow -> "codex plugin"
 - "Claude Code" (the product/CLI) -> "Codex CLI"
 KEEP unchanged (valid on Codex): the hook names "SessionStart" and "SubagentStart"; the abstract primitives Consult/Convene/Inform/Onboard.
-After writing each file, RE-READ it and delete any remaining haiku/sonnet/opus, "Task tool", "TeamCreate", "SendMessage", "CLAUDE.md", "~/.claude/", or "${CLAUDE_PLUGIN_ROOT}" literal.'
-    printf 'Execute the following generation prompt. Write all output files to the current working directory (%s). Plugin-internal path token is ${CODEX_PLUGIN_ROOT}.%s\n\n%s\n\n%s' "${OUTPUT_DIR}" "${suffix}" "${repl}" "${content}"
+Onboard binding (state accurately): the SubagentStart inject-profile hook is the PRIMARY, always-available path; native agent definitions (${PLUGIN_ROOT}/.codex/agents/<role>.toml) are an ENHANCEMENT that bootstrap.sh installs into ~/.codex/agents/. Codex does NOT auto-discover plugin-bundled agent definitions — do NOT claim native agent defs auto-load from the plugin.
+After writing each file, RE-READ it and delete any remaining haiku/sonnet/opus, "Task tool", "TeamCreate", "SendMessage", "CLAUDE.md", "~/.claude/", "${CLAUDE_PLUGIN_ROOT}", or "${CODEX_PLUGIN_ROOT}" literal.'
+    printf 'Execute the following generation prompt. Write all output files to the current working directory (%s). Plugin-internal path token is ${PLUGIN_ROOT}.%s\n\n%s\n\n%s' "${OUTPUT_DIR}" "${suffix}" "${repl}" "${content}"
 }
 
 # ── sentinels ────────────────────────────────────────────────────────────────

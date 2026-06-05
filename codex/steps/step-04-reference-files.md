@@ -7,7 +7,7 @@ Adaptation of `/path/to/juntogen/claude/steps/step-04-reference-files.md`.
 - `/path/to/juntospec/D48-reference-system.md`, `D24-triage-engine.md`, `D32-execution-models.md`, `D40-quality-framework.md` — canonical sources referenced by the reference files.
 
 ## Codex substitutions
-- `${CLAUDE_PLUGIN_ROOT}` → `${CODEX_PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/`.
+- `${CLAUDE_PLUGIN_ROOT}` → `${PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/`.
 - In examples, replace Claude platform-tool names with Codex bindings: delegation/teams → **Codex subagents**
   (parallel, consolidated handback); `SubagentStart`/`SessionStart` hooks keep their names (Codex has them);
   peer messaging is **unavailable** (handback-only synthesis).

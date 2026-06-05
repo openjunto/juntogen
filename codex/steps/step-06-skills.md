@@ -9,11 +9,11 @@ Adaptation of `/path/to/juntogen/claude/steps/step-06-commands.md` (which emits 
 ## Codex substitutions
 - Each `SKILL.md` frontmatter MUST include **both** `name:` and `description:` (Codex requires `name`;
   Claude only required `description`).
-- `${CLAUDE_PLUGIN_ROOT}` → `${CODEX_PLUGIN_ROOT}`.
+- `${CLAUDE_PLUGIN_ROOT}` → `${PLUGIN_ROOT}`.
 - Invocation idiom: where the Claude skill references `/oj:<name>` slash commands, note the Codex idiom
   (`$<skillname>` or `/skills`) for invocation. Keep the skill names (`cycle`, `run-task`, `show-backlog`,
   `save-session`, `health-check`).
-- `health-check` must probe the Codex bindings: `${CODEX_PLUGIN_ROOT}/bin/oj-helper`, `jq`, `.codex-plugin/plugin.json`,
+- `health-check` must probe the Codex bindings: `${PLUGIN_ROOT}/bin/oj-helper`, `jq`, `.codex-plugin/plugin.json`,
   `hooks/hooks.json`, and the `SubagentStart`/`SessionStart` hook wiring.
 
 ## Output

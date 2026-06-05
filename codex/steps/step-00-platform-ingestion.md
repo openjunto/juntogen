@@ -47,7 +47,7 @@ but the contents differ. Authoritative contents are in `juntogen/codex/platform-
 the salient Codex-specific points:
 
 - **`platform.identity`** (Codex extension): `platform_id: codex`, `install_root: ~/.codex`,
-  `plugin_root_token: ${CODEX_PLUGIN_ROOT}`, `plugin_manifest_dir: .codex-plugin`,
+  `plugin_root_token: ${PLUGIN_ROOT}`, `plugin_manifest_dir: .codex-plugin`,
   `manager_protocol_native_file: AGENTS.md`. Downstream steps consume these for path/token binding.
 - **`platform.tools`**: Codex tool surface — `subagents` (the Consult/Convene substrate;
   parameters include `developer_instructions`, `model`, `model_reasoning_effort`), `read_file`,

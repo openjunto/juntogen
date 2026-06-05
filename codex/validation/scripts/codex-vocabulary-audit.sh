@@ -26,6 +26,7 @@ if [ -t 1 ]; then RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; NC=$'\033[0m'; else RE
 # Banned terms (ERE). Word-boundaried where a substring would over-match.
 BANNED=(
   '\$\{CLAUDE_PLUGIN_ROOT\}'
+  '\$\{CODEX_PLUGIN_ROOT\}'
   '~/\.claude/'
   '\b(haiku|sonnet|opus)\b'
   '\bTask tool\b'

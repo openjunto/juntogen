@@ -29,12 +29,12 @@ if have .codex-plugin/marketplace.json && jq -e '.name and .plugins' "${PLUGIN_D
   ok "C2 .codex-plugin/marketplace.json valid"
 else no "C2 .codex-plugin/marketplace.json valid"; fi
 
-# C3 — hooks.json: valid + SessionStart/SubagentStart + CODEX_PLUGIN_ROOT oj-helper commands
+# C3 — hooks.json: valid + SessionStart/SubagentStart + PLUGIN_ROOT oj-helper commands
 if have hooks/hooks.json && jq -e '.hooks.SessionStart and .hooks.SubagentStart' "${PLUGIN_DIR}/hooks/hooks.json" >/dev/null 2>&1; then
   cmds=$(jq -r '[.hooks[][]?.hooks[]?.command] | join(" ")' "${PLUGIN_DIR}/hooks/hooks.json")
-  if echo "${cmds}" | grep -q '\${CODEX_PLUGIN_ROOT}/bin/oj-helper conductor-inject' \
-     && echo "${cmds}" | grep -q '\${CODEX_PLUGIN_ROOT}/bin/oj-helper inject-profile'; then
-    ok "C3 hooks.json wires conductor-inject (SessionStart) + inject-profile (SubagentStart) via \${CODEX_PLUGIN_ROOT}"
+  if echo "${cmds}" | grep -q '\${PLUGIN_ROOT}/bin/oj-helper conductor-inject' \
+     && echo "${cmds}" | grep -q '\${PLUGIN_ROOT}/bin/oj-helper inject-profile'; then
+    ok "C3 hooks.json wires conductor-inject (SessionStart) + inject-profile (SubagentStart) via \${PLUGIN_ROOT}"
   else no "C3 hooks.json hook commands" "cmds=${cmds}"; fi
 else no "C3 hooks.json valid + SessionStart/SubagentStart"; fi
 

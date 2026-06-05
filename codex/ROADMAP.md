@@ -16,7 +16,7 @@ that this roadmap would then have to un-fork.
 **Plan:** extract the shared driver into `juntogen/lib/generate-core` (or
 `juntogen/generate --platform <p>`), parameterized by a small per-platform manifest:
 - `PLATFORM_ID`, `STEPS_DIR`, `PLATFORM_DEFAULTS`, default `MODEL`
-- `PLUGIN_ROOT_TOKEN` (`${CLAUDE_PLUGIN_ROOT}` / `${CODEX_PLUGIN_ROOT}`)
+- `PLUGIN_ROOT_TOKEN` (`${CLAUDE_PLUGIN_ROOT}` / `${PLUGIN_ROOT}`)
 - `STATIC_EMITTER` (the platform's `lib/emit-static-plugin-manifest.sh`)
 - the per-step tables (`step_desc`, `step_max_turns`, `step_prompt`, `verify_step_*`)
 - `GENERATION_MODE_PROMPT` (wording mentions the platform + its protocol file)
@@ -43,9 +43,9 @@ Each is an adaptation of the corresponding `juntogen/claude/steps/` prompt. Plat
 
 | Step | Adaptation deltas for Codex |
 |---|---|
-| **02** preamble + index | `${CODEX_PLUGIN_ROOT}` token; otherwise platform-agnostic. |
+| **02** preamble + index | `${PLUGIN_ROOT}` token; otherwise platform-agnostic. |
 | **03** agent profiles (16 full + 16 compact) | **Highest-value Codex divergence.** In addition to `agents/*.md` profiles, emit native subagent definitions `.codex/agents/<expert>.toml` (`name`, `description`, `developer_instructions` = preamble+profile, `model`, `model_reasoning_effort` per the D32 §6 function-first rules). This is the PRIMARY Onboard binding and unlocks per-expert effort. |
-| **04** reference files (8) | `${CODEX_PLUGIN_ROOT}`; replace Claude tool names in examples with Codex bindings. |
+| **04** reference files (8) | `${PLUGIN_ROOT}`; replace Claude tool names in examples with Codex bindings. |
 | **05** templates (5) | Platform-agnostic; token swap only. |
 | **06** skills (5 × SKILL.md) | Add `name:` to frontmatter (Codex requires `name` + `description`). Confirm skill discovery path (plugin `skills/` vs `.agents/skills`). Replace `/oj:*` command references with Codex slash-command/skill invocation. |
 | **07** oj-helper + static manifests | oj-helper subcommands rebind to Codex hooks (`conductor-inject`, `inject-profile`, `subagents-check`, `migrate-legacy`). Static emit calls `juntogen/codex/lib/emit-static-plugin-manifest.sh`. inject-profile may be simpler than Claude's (Codex may pass the agent name in hook stdin — `[VERIFY]`). |
@@ -91,23 +91,23 @@ edits to the genome.
 Resolved during the validation pass via the OpenAI Codex docs. Two are correctness-affecting and
 need a generator sweep + regeneration (ideally confirmed against a live `codex` CLI first).
 
-1. 🔴 **Plugin-bundled agent discovery** — RESOLVED: agent definitions are **not** a bundled plugin
-   component. Codex discovers agents only from `~/.codex/agents/` or `<repo>/.codex/agents/`.
-   **ACTION**: oj-codex must ship an install step that copies `.codex/agents/*.toml` into
-   `~/.codex/agents/`, **or** make the `SubagentStart` inject-profile hook the PRIMARY Onboard
-   mechanism (it IS plugin-bundleable). The current bundled `.codex/agents/` will not auto-load.
+1. ✅ **Plugin-bundled agent discovery** — RESOLVED + DONE: agent definitions are not a bundled plugin
+   component (Codex loads agents only from `~/.codex/agents/` or `<repo>/.codex/agents/`), and
+   plugin-bundled hooks are not yet reliably loaded by the runtime (openai/codex#16430, #17331).
+   `bootstrap.sh` (emitted into the plugin) installs `.codex/agents/*.toml` → `~/.codex/agents/` and
+   merges `hooks/hooks.json` → `~/.codex/hooks.json`. The `SubagentStart` inject-profile hook is the
+   always-available PRIMARY Onboard path; native agent defs are the per-agent model/effort enhancement.
 2. ✅ **`SubagentStart` matcher** — RESOLVED: `matcher` is a regex applied to `agent_type`; hook
    stdin carries `agent_id` + `agent_type`, so `inject-profile` can identify the profile directly
    (simpler than Claude's transcript-reading). `matcher: ""` (all) is valid.
 3. ✅ **`plugin.json` schema** — RESOLVED: required `name` (kebab-case) + `version` + `description`;
    components referenced via `skills`/`hooks`/`mcpServers`/`apps`. Emitter now writes
    `"skills": "./skills/"` + `"hooks": "./hooks/hooks.json"`.
-4. 🔴 **Plugin-root token** — RESOLVED (correction): the documented token is **`${PLUGIN_ROOT}`**
-   (`CLAUDE_PLUGIN_ROOT` accepted "for compatibility"); **`${CODEX_PLUGIN_ROOT}` is not documented**.
-   The generator + generated plugin use `${CODEX_PLUGIN_ROOT}` everywhere — sweep to `${PLUGIN_ROOT}`
-   (or `${CLAUDE_PLUGIN_ROOT}` via the compat shim) and regenerate. Touches the step prompts,
-   `generate` build_prompt preamble, `lib/emit-static-plugin-manifest.sh` (hooks.json), `D64-tooling.md`,
-   and `platform-defaults.yaml` (`plugin_root_token`). Highest-priority correctness fix.
+4. ✅ **Plugin-root token** — RESOLVED + DONE: the documented token is **`${PLUGIN_ROOT}`** (Codex-native
+   env var + inline substitution; `${CLAUDE_PLUGIN_ROOT}` also works as a compat shim). The undocumented
+   `${CODEX_PLUGIN_ROOT}` used by the first generation has been swept to `${PLUGIN_ROOT}` across the
+   generator (step prompts, `generate` preamble, `lib/emit-static-plugin-manifest.sh`, `D64-tooling.md`,
+   `platform-defaults.yaml`) and the plugin regenerated.
 5. ✅ **Skills discovery** — plugin `skills/` referenced via the `skills` manifest field (added);
    loose skills also load from `~/.agents/skills` / `<repo>/.agents/skills`.
 6. ⬜ **Model facts** — still placeholders; confirm per-model `context_window`, `max_output_tokens`,

@@ -3,7 +3,7 @@
 # oj-helper-hook-test.sh — runtime hook-contract test for the generated oj-codex oj-helper.
 # Codex sibling of oj-claude/scripts/tests/oj-helper-hook-test.sh, scoped to the Codex
 # subcommands. Exercises the real script with mock Codex hook conditions on a per-scenario
-# isolated tempdir (rebinds CODEX_PLUGIN_ROOT). No codex binary required.
+# isolated tempdir (rebinds PLUGIN_ROOT). No codex binary required.
 #
 # Scenarios:
 #   S1 conductor-inject present     -> valid JSON, additionalContext == CONDUCTOR.md, banner on stderr, exit 0
@@ -31,7 +31,7 @@ if [ -t 1 ]; then RED=$'\033[0;31m'; GREEN=$'\033[0;32m'; CYAN=$'\033[0;36m'; NC
 PASS=0; FAIL=0
 chk(){ if [ "$2" = ok ]; then echo "${GREEN}PASS${NC} $1"; PASS=$((PASS+1)); else echo "${RED}FAIL${NC} $1"; [ -n "${3:-}" ] && echo "${CYAN}      $3${NC}"; FAIL=$((FAIL+1)); fi; }
 
-# run oj-helper with an isolated CODEX_PLUGIN_ROOT; capture stdout/stderr/exit into T.
+# run oj-helper with an isolated PLUGIN_ROOT; capture stdout/stderr/exit into T.
 run() { # $1=T $2=subcmd ...
   local T="$1"; shift; local sub="$1"; shift; local rc=0
   # Copy the helper into the isolated tree so its script-relative CONDUCTOR fallback
@@ -40,7 +40,7 @@ run() { # $1=T $2=subcmd ...
   mkdir -p "$T/plugin/bin/lib"
   cp "${OJ_HELPER}" "$T/plugin/bin/oj-helper"; chmod +x "$T/plugin/bin/oj-helper"
   cp "${CONTRACTS}" "$T/plugin/bin/lib/contracts.sh"
-  HOME="$T/home" CODEX_PLUGIN_ROOT="$T/plugin" XDG_CONFIG_HOME="$T/xdg" \
+  HOME="$T/home" PLUGIN_ROOT="$T/plugin" XDG_CONFIG_HOME="$T/xdg" \
     "$T/plugin/bin/oj-helper" "$sub" "$@" >"$T/out" 2>"$T/err" </dev/null || rc=$?
   echo "$rc" >"$T/rc"
 }

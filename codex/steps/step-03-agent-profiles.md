@@ -13,7 +13,7 @@ files that carry the profile and bind per-expert model + reasoning effort.
 
 ## Outputs
 1. **16 full profiles** `agents/<role>.md` and **16 compact** `agents/<role>-compact.md` — authored per the
-   Claude step-03 template (platform-agnostic content). Use `${CODEX_PLUGIN_ROOT}` for any plugin-internal path.
+   Claude step-03 template (platform-agnostic content). Use `${PLUGIN_ROOT}` for any plugin-internal path.
 2. **16 native subagent definitions** `.codex/agents/<role>.toml`, one per expert, each:
    ```toml
    name = "<role>"

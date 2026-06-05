@@ -7,7 +7,7 @@ platform-agnostic — this step is essentially a path-token swap.
 - `/path/to/juntogen/claude/steps/step-05-templates.md` — authoritative template structure for all 5.
 
 ## Codex substitutions
-- `${CLAUDE_PLUGIN_ROOT}` → `${CODEX_PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/` if present.
+- `${CLAUDE_PLUGIN_ROOT}` → `${PLUGIN_ROOT}`; `~/.claude/` → `~/.codex/` if present.
 - Any model/tool references use Codex bindings (see step-04).
 
 ## Output (5 files in `templates/`)

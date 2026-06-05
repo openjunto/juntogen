@@ -34,7 +34,7 @@ in `juntospec`; this file binds them to concrete OpenAI Codex CLI mechanisms.
 
 ## oj-helper — CLI Dispatcher Script
 
-**Location (in plugin tree)**: `${CODEX_PLUGIN_ROOT}/bin/oj-helper`
+**Location (in plugin tree)**: `${PLUGIN_ROOT}/bin/oj-helper`
 
 **Architecture**: Bash dispatcher (case statement on `$1`). Identical conventions to the
 Claude binding (`set -euo pipefail`, `debug()` gated by `OJ_HOOK_DEBUG=1`, `die()`,
@@ -58,7 +58,7 @@ JSON from stdin.
 
 **Protocol**:
 1. Read hook JSON from stdin (`session_id`, `hook_event_name`, `cwd`, `model`, …).
-2. Read `${CODEX_PLUGIN_ROOT}/CONDUCTOR.md`.
+2. Read `${PLUGIN_ROOT}/CONDUCTOR.md`.
 3. Emit context injection on stdout:
 ```json
 {
@@ -68,7 +68,7 @@ JSON from stdin.
   }
 }
 ```
-4. Emit a version banner to **stderr only**: `OpenJunto v${version} active — OpenJunto coordination system` (`${version}` from `${CODEX_PLUGIN_ROOT}/VERSION`, fallback `unknown`). stdout carries only the JSON payload.
+4. Emit a version banner to **stderr only**: `OpenJunto v${version} active — OpenJunto coordination system` (`${version}` from `${PLUGIN_ROOT}/VERSION`, fallback `unknown`). stdout carries only the JSON payload.
 
 **Fallback**: If `CONDUCTOR.md` is absent/unreadable, exit 0 and emit the pinned advisory
 `OJ_STDERR_CONDUCTOR_MISSING` (see `bin/lib/contracts.sh`) to stderr; the session proceeds.
@@ -114,7 +114,7 @@ Codex subagents are defined as standalone TOML files. This is the **primary** On
 each OpenJunto expert is emitted as an agent definition whose `developer_instructions` carry
 the preamble + profile. No hook is required for static experts.
 
-**Location**: `${CODEX_PLUGIN_ROOT}/.codex/agents/<expert>.toml` (or copied to
+**Location**: `${PLUGIN_ROOT}/.codex/agents/<expert>.toml` (or copied to
 `~/.codex/agents/` at install). [VERIFY] exact discovery path for plugin-bundled agents.
 
 **Definition shape** (per developers.openai.com/codex/subagents):
@@ -184,7 +184,7 @@ oj-codex/
 
 **Install**: `codex plugin marketplace add <path>` then `codex plugin install oj@openjunto`.
 Codex installs into `~/.codex/plugins/cache/<marketplace>/<plugin>/<version>/` and resolves
-`${CODEX_PLUGIN_ROOT}` to that path at hook-invocation time. [VERIFY] exact CLI invocation
+`${PLUGIN_ROOT}` to that path at hook-invocation time. [VERIFY] exact CLI invocation
 and whether `agents/` definitions are auto-discovered from the plugin or must be copied to
 `~/.codex/agents/`.
 

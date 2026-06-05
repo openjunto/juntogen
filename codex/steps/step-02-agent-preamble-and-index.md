@@ -10,9 +10,9 @@ directory, applying the Codex substitutions below.
 - `CONDUCTOR.md` (from step-01, in the working dir) — for cross-reference format.
 
 ## Codex substitutions (the only deltas)
-- Replace every `${CLAUDE_PLUGIN_ROOT}` with `${CODEX_PLUGIN_ROOT}`. Never use `~/.codex/` for plugin-internal paths.
+- Replace every `${CLAUDE_PLUGIN_ROOT}` with `${PLUGIN_ROOT}`. Never use `~/.codex/` for plugin-internal paths.
 - The expert roster is the same 16 roles. Note in `index.md` that each expert ALSO materializes as a
-  native subagent definition at `${CODEX_PLUGIN_ROOT}/.codex/agents/<role>.toml` (emitted in step-03);
+  native subagent definition at `${PLUGIN_ROOT}/.codex/agents/<role>.toml` (emitted in step-03);
   the `agents/*.md` profile remains the human-readable source of truth.
 - `_preamble.md` content (shared expert infrastructure, adversarial-stance framing) is platform-agnostic — reproduce verbatim.
 

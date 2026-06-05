@@ -42,7 +42,7 @@ platform:
     platform_id: "codex"
     cli_binary: "codex"
     install_root: "~/.codex"          # $CODEX_HOME; override via CODEX_HOME env var
-    plugin_root_token: "${CODEX_PLUGIN_ROOT}"   # resolved by the Codex plugin host at hook-invocation time
+    plugin_root_token: "${PLUGIN_ROOT}"   # resolved by the Codex plugin host at hook-invocation time
     manager_protocol_native_file: "AGENTS.md"   # platform-native instruction file (left to the user)
     plugin_manifest_dir: ".codex-plugin"        # plugin.json lives here; skills/ hooks/ .mcp.json at plugin root
 

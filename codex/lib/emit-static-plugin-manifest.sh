@@ -11,7 +11,7 @@
 # This is the Codex sibling of juntogen/claude/lib/emit-static-plugin-manifest.sh.
 # The Codex plugin layout is near-identical to the Claude layout; the deltas are:
 #   .claude-plugin/        -> .codex-plugin/
-#   ${CLAUDE_PLUGIN_ROOT}  -> ${CODEX_PLUGIN_ROOT}
+#   ${CLAUDE_PLUGIN_ROOT}  -> ${PLUGIN_ROOT}
 #   hooks SubagentStart matcher "general-purpose" -> "" ([VERIFY]; Codex subagents
 #                                                     are named, not a single agent class)
 #   repository/homepage    -> openjunto/oj-codex
@@ -128,8 +128,8 @@ EOF
 # conductor-inject / inject-profile subcommands port directly.
 #
 #   SessionStart matcher="" : conductor-inject (loads CONDUCTOR.md) + migrate-legacy
-#   SubagentStart matcher="": inject-profile (Onboard FALLBACK; the PRIMARY Codex
-#                             binding is native agent-definition files emitted in step-03)
+#   SubagentStart matcher="": inject-profile (PRIMARY Onboard path — plugin-bundleable; native
+#                             .codex/agents/*.toml are an enhancement installed by bootstrap.sh)
 emit_hooks_json() {
     local output_dir="${1:-}"
     [ -n "${output_dir}" ] || _eatpm_die "emit_hooks_json requires output_dir"
@@ -150,12 +150,12 @@ emit_hooks_json() {
                     hooks: [
                         {
                             type: "command",
-                            command: "${CODEX_PLUGIN_ROOT}/bin/oj-helper conductor-inject",
+                            command: "${PLUGIN_ROOT}/bin/oj-helper conductor-inject",
                             timeout: 5
                         },
                         {
                             type: "command",
-                            command: "${CODEX_PLUGIN_ROOT}/bin/oj-helper migrate-legacy",
+                            command: "${PLUGIN_ROOT}/bin/oj-helper migrate-legacy",
                             timeout: 5
                         }
                     ]
@@ -167,7 +167,7 @@ emit_hooks_json() {
                     hooks: [
                         {
                             type: "command",
-                            command: "${CODEX_PLUGIN_ROOT}/bin/oj-helper inject-profile",
+                            command: "${PLUGIN_ROOT}/bin/oj-helper inject-profile",
                             timeout: 5
                         }
                     ]
@@ -240,6 +240,71 @@ emit_platform_defaults() {
     echo "wrote: ${output_dir}/platform-defaults.yaml"
 }
 
+# emit_bootstrap <output_dir>
+#
+# Writes <output_dir>/bootstrap.sh — the installer for the bits Codex does NOT
+# auto-discover from a plugin (resolved [VERIFY] findings):
+#   1) native subagent definitions (.codex/agents/*.toml) — Codex loads agents only
+#      from ~/.codex/agents or <repo>/.codex/agents, never from a plugin bundle.
+#   2) lifecycle hooks — plugin-bundled hooks/hooks.json is not yet reliably loaded by
+#      the Codex runtime (openai/codex#16430, #17331), so merge into ~/.codex/hooks.json
+#      with ${PLUGIN_ROOT} resolved to the absolute plugin path. oj-helper then finds
+#      CONDUCTOR.md via PLUGIN_ROOT or its script-relative fallback.
+# DATA-class: deterministic template.
+emit_bootstrap() {
+    local output_dir="${1:-}"
+    [ -n "${output_dir}" ] || _eatpm_die "emit_bootstrap requires output_dir"
+    [ -d "${output_dir}" ] || mkdir -p "${output_dir}"
+
+    cat > "${output_dir}/bootstrap.sh" <<'EOF'
+#!/usr/bin/env bash
+# bootstrap.sh — install oj-codex components Codex does not auto-discover from a plugin.
+#
+#   1) native subagent definitions  .codex/agents/*.toml -> $CODEX_HOME/agents/
+#   2) lifecycle hooks              hooks/hooks.json      -> $CODEX_HOME/hooks.json (merged)
+#
+# Codex discovers agents only from ~/.codex/agents (or <repo>/.codex/agents), and
+# plugin-bundled hooks are not yet reliably loaded by the runtime — so we install both
+# into $CODEX_HOME directly. Re-running replaces oj-* agents and de-dups hook entries.
+set -euo pipefail
+PLUGIN_ROOT="$(cd "$(dirname "$0")" && pwd)"
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+mkdir -p "$CODEX_HOME/agents"
+
+# 1) agent definitions
+n=0
+for t in "$PLUGIN_ROOT"/.codex/agents/*.toml; do
+  [ -e "$t" ] || continue
+  cp -f "$t" "$CODEX_HOME/agents/"; n=$((n+1))
+done
+echo "oj-codex: installed $n agent definition(s) -> $CODEX_HOME/agents/"
+
+# 2) hooks — merge with the absolute plugin path substituted for ${PLUGIN_ROOT}
+if command -v jq >/dev/null 2>&1; then
+  dst="$CODEX_HOME/hooks.json"
+  [ -f "$dst" ] || echo '{"hooks":{}}' > "$dst"
+  tmp="$(mktemp)"
+  sed "s#\${PLUGIN_ROOT}#${PLUGIN_ROOT}#g" "$PLUGIN_ROOT/hooks/hooks.json" > "$tmp"
+  # Deep-merge SessionStart/SubagentStart arrays, then de-dup by command so re-runs are idempotent.
+  jq -s '
+    def merge_event($d;$s;$k): ($d[$k] // []) + ($s[$k] // []) | unique_by(.hooks[0].command // tostring);
+    .[0] as $d | .[1] as $s
+    | $d * {hooks: ($d.hooks + $s.hooks
+        + {SessionStart: merge_event($d.hooks;$s.hooks;"SessionStart"),
+           SubagentStart: merge_event($d.hooks;$s.hooks;"SubagentStart")})}
+  ' "$dst" "$tmp" > "$dst.new" && mv "$dst.new" "$dst"
+  rm -f "$tmp"
+  echo "oj-codex: merged hooks -> $dst"
+else
+  echo "oj-codex: jq not found — add $PLUGIN_ROOT/hooks/hooks.json to $CODEX_HOME/hooks.json manually." >&2
+fi
+
+echo "oj-codex: done. Restart Codex; run '/hooks' to confirm, and '/agent' to use the experts."
+EOF
+    chmod +x "${output_dir}/bootstrap.sh" 2>/dev/null || true
+    echo "wrote: ${output_dir}/bootstrap.sh"
+}
+
 # Standalone dispatch.
 if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
     case "${1:-}" in
@@ -248,6 +313,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
         --hooks-json)         shift; emit_hooks_json "$@" ;;
         --contracts-sh)       shift; emit_contracts_sh "$@" ;;
         --platform-defaults)  shift; emit_platform_defaults "$@" ;;
+        --bootstrap)          shift; emit_bootstrap "$@" ;;
         --all)
             shift
             output_dir="${1:-}"
@@ -259,6 +325,7 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
             emit_hooks_json "${output_dir}"
             emit_contracts_sh "${output_dir}"
             emit_platform_defaults "${output_dir}"
+            emit_bootstrap "${output_dir}"
             ;;
         -h|--help|"")
             cat <<EOF

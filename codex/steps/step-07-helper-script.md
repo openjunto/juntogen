@@ -13,7 +13,7 @@ the orchestrator's static-emit step — **do NOT generate those**; generate only
 ## bin/oj-helper subcommands (Codex bindings)
 - `conductor-inject` — SessionStart hook: read hook JSON from stdin; emit
   `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"<CONDUCTOR.md contents>"}}` on stdout;
-  print `OpenJunto v${version} active …` banner to **stderr only** (version from `${CODEX_PLUGIN_ROOT}/VERSION`).
+  print `OpenJunto v${version} active …` banner to **stderr only** (version from `${PLUGIN_ROOT}/VERSION`).
   If CONDUCTOR.md missing, exit 0 and emit the `OJ_STDERR_CONDUCTOR_MISSING` advisory (source `bin/lib/contracts.sh`).
 - `inject-profile` — SubagentStart hook (Onboard fallback): emit preamble + profile as `additionalContext`;
   graceful-degrade to exit 0 / no output when no expert marker or deps missing.
@@ -22,7 +22,7 @@ the orchestrator's static-emit step — **do NOT generate those**; generate only
 
 ## Requirements
 - `set -euo pipefail`; `debug()` gated by `OJ_HOOK_DEBUG=1`; `die()`; graceful degradation if `jq`/`gh` missing.
-- Use `${CODEX_PLUGIN_ROOT}/…` for all plugin-internal paths. Source `${CODEX_PLUGIN_ROOT}/bin/lib/contracts.sh`.
+- Use `${PLUGIN_ROOT}/…` for all plugin-internal paths. Source `${PLUGIN_ROOT}/bin/lib/contracts.sh`.
 - Make `bin/oj-helper` executable.
 
 ## Output

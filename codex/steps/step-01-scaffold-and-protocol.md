@@ -52,9 +52,9 @@ applying the substitutions below.
 
 ### S1 — Plugin-internal path token
 
-Replace every `${CLAUDE_PLUGIN_ROOT}` with **`${CODEX_PLUGIN_ROOT}`**. All plugin-internal
+Replace every `${CLAUDE_PLUGIN_ROOT}` with **`${PLUGIN_ROOT}`**. All plugin-internal
 references (`agents/`, `reference/`, `skills/`, `templates/`, `hooks/`, `bin/`) MUST use
-`${CODEX_PLUGIN_ROOT}/<path>`.
+`${PLUGIN_ROOT}/<path>`.
 - **MUST NOT** use `~/.codex/<path>` for plugin-internal files (that is the adopter HOME, not
   the plugin cache install path).
 - **MUST NOT** use bare relative paths.
@@ -103,7 +103,7 @@ Replace the Claude `TeamCreate`-unavailable clause with the Codex degradation ch
 ## Verification
 
 All Claude step-01 verification items apply, with these Codex-specific changes:
-- [ ] `CONDUCTOR.md` contains ≥1 `${CODEX_PLUGIN_ROOT}/` reference and ZERO `${CLAUDE_PLUGIN_ROOT}` / `~/.claude/` references.
+- [ ] `CONDUCTOR.md` contains ≥1 `${PLUGIN_ROOT}/` reference and ZERO `${CLAUDE_PLUGIN_ROOT}` / `~/.claude/` references.
 - [ ] `.codex/agents/` directory exists at plugin root (empty at this stage).
 - [ ] Model selection table reflects gpt-5.4-mini / gpt-5.3-codex / gpt-5.5 with tiers routine/implementation/reasoning.
 - [ ] Section 7 emits the per-expert-effort-IS-controllable note (NOT the Claude out-of-scope note).
