@@ -56,6 +56,14 @@ emit_plugin_json() {
     # against developers.openai.com/codex/plugins/build. The shape below mirrors the
     # Claude manifest (name/version/description/author/license/repository/homepage/
     # keywords), which Codex's manifest is documented to closely parallel.
+    # name MUST be kebab-case. skills/hooks reference bundled components per the
+    # documented manifest schema (developers.openai.com/codex/plugins/build):
+    #   "skills": "./skills/"        — bundled Agent Skills directory
+    #   "hooks":  "./hooks/hooks.json" — lifecycle hooks (also auto-detected at the
+    #                                    default path, but declared here for explicitness)
+    # NOTE: agent definitions (.codex/agents/*.toml) are NOT a bundled plugin component —
+    # Codex discovers agents only from ~/.codex/agents or <repo>/.codex/agents, so they
+    # require an install step (see ROADMAP). They are intentionally not referenced here.
     cat > "${plugin_dir}/plugin.json" <<EOF
 {
   "name": "oj",
@@ -65,7 +73,9 @@ emit_plugin_json() {
   "license": "MIT",
   "repository": "https://github.com/openjunto/oj-codex",
   "homepage": "https://github.com/openjunto/oj-codex",
-  "keywords": ["openjunto", "coordination", "multi-agent", "deliberation", "codex"]
+  "keywords": ["openjunto", "coordination", "multi-agent", "deliberation", "codex"],
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }
 EOF
 

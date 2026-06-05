@@ -86,18 +86,32 @@ edits to the genome.
 
 ---
 
-## 5. Open questions to confirm against the live Codex CLI (`[VERIFY]`)
+## 5. [VERIFY] status — resolved against OpenAI Codex docs (mid-2026)
 
-1. **Plugin-bundled agent discovery** — are `.codex/agents/*.toml` auto-discovered from an
-   installed plugin, or must they be copied to `~/.codex/agents/`? Drives step-03 + install.
-2. **`SubagentStart` matcher** — value/semantics for named subagents; whether the agent name
-   is in hook stdin (simplifies `inject-profile` vs Claude's transcript-reading hack).
-3. **`plugin.json` / `marketplace.json` schema** — exact required fields for the Codex manifest.
-4. **`${CODEX_PLUGIN_ROOT}` resolution** — confirm the token name and that it resolves to the
-   install cache path at hook-invocation time.
-5. **Skills discovery path** — plugin `skills/` vs `.agents/skills` vs `~/.agents/skills`.
-6. **Model facts** — per-model `context_window`, `max_output_tokens`, and cost ratios for
-   gpt-5.5 / gpt-5.3-codex / gpt-5.4-mini (placeholders in `platform-defaults.yaml`).
+Resolved during the validation pass via the OpenAI Codex docs. Two are correctness-affecting and
+need a generator sweep + regeneration (ideally confirmed against a live `codex` CLI first).
+
+1. 🔴 **Plugin-bundled agent discovery** — RESOLVED: agent definitions are **not** a bundled plugin
+   component. Codex discovers agents only from `~/.codex/agents/` or `<repo>/.codex/agents/`.
+   **ACTION**: oj-codex must ship an install step that copies `.codex/agents/*.toml` into
+   `~/.codex/agents/`, **or** make the `SubagentStart` inject-profile hook the PRIMARY Onboard
+   mechanism (it IS plugin-bundleable). The current bundled `.codex/agents/` will not auto-load.
+2. ✅ **`SubagentStart` matcher** — RESOLVED: `matcher` is a regex applied to `agent_type`; hook
+   stdin carries `agent_id` + `agent_type`, so `inject-profile` can identify the profile directly
+   (simpler than Claude's transcript-reading). `matcher: ""` (all) is valid.
+3. ✅ **`plugin.json` schema** — RESOLVED: required `name` (kebab-case) + `version` + `description`;
+   components referenced via `skills`/`hooks`/`mcpServers`/`apps`. Emitter now writes
+   `"skills": "./skills/"` + `"hooks": "./hooks/hooks.json"`.
+4. 🔴 **Plugin-root token** — RESOLVED (correction): the documented token is **`${PLUGIN_ROOT}`**
+   (`CLAUDE_PLUGIN_ROOT` accepted "for compatibility"); **`${CODEX_PLUGIN_ROOT}` is not documented**.
+   The generator + generated plugin use `${CODEX_PLUGIN_ROOT}` everywhere — sweep to `${PLUGIN_ROOT}`
+   (or `${CLAUDE_PLUGIN_ROOT}` via the compat shim) and regenerate. Touches the step prompts,
+   `generate` build_prompt preamble, `lib/emit-static-plugin-manifest.sh` (hooks.json), `D64-tooling.md`,
+   and `platform-defaults.yaml` (`plugin_root_token`). Highest-priority correctness fix.
+5. ✅ **Skills discovery** — plugin `skills/` referenced via the `skills` manifest field (added);
+   loose skills also load from `~/.agents/skills` / `<repo>/.agents/skills`.
+6. ⬜ **Model facts** — still placeholders; confirm per-model `context_window`, `max_output_tokens`,
+   and cost ratios for gpt-5.5 / gpt-5.3-codex / gpt-5.4-mini against the live models doc.
 7. **Backlog location** — Codex project-local convention for `BACKLOG.md` / `.codex/`.
 
 ---
