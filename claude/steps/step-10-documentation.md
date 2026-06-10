@@ -48,7 +48,7 @@ Generate three user-facing documentation files:
      ```
 
 3. **Usage** — Show how to put OpenJunto to work: the manager protocol loads at session start; the user invokes a coordinated cycle with `/oj:cycle <task>` (or `/oj:run-task` for a backlog item). Examples:
-   - "/oj:cycle Review this pull request for security issues."
+   - "/oj:cycle I'm adding rate limiting to the public REST API of our Node/Express auth service. Expected ~10,000 requests per minute, with one Redis instance available. What should I think about before implementing?"
    - "/oj:cycle Fix the flaky test in auth_service_test.go."
    - "/oj:cycle Evaluate whether we should migrate from REST to gRPC for internal services."
 
@@ -167,7 +167,7 @@ Generate three user-facing documentation files:
    The banner is emitted by the `SessionStart` hook. It appears on **session start** (startup, resume, `/clear`, compaction) — NOT on `/reload-plugins` or `/plugin reload` (plugin reload refreshes skills/agents/hooks in-process but does not re-fire `SessionStart`). After installing or reloading the plugin, start a new session (or `/clear`) to see the banner. `{version}` is read from the plugin package's `VERSION` file.
 
 2. **Your First Task** — Start with something where multi-perspective review adds obvious value. The example MUST be prefixed with `/oj:cycle ` (the explicit-invocation activation model — manager triage engages only on coordinated-cycle command invocations, not free-form messages):
-   - `/oj:cycle Review this file for security issues: src/auth/token_validator.go`
+   - `/oj:cycle I'm adding rate limiting to the public REST API of our Node/Express auth service. Expected ~10,000 requests per minute, with one Redis instance available. What should I think about before implementing?`
    - Observe: Manager triages, spawns Security Engineer and Distinguished Engineer, synthesizes findings
 
 3. **Understanding Triage** — The system scores requests against 4 criteria:
@@ -238,7 +238,7 @@ After generating all three files, verify:
 3. **docs/onboarding.md**:
    - Confirms installation with version banner check
    - First task is concrete and shows triage in action
-   - **Positive**: the "Your First Task" example MUST be prefixed with `/oj:cycle ` (e.g., `/oj:cycle Review this file for security issues: src/auth/token_validator.go`) — matches the live `oj-claude/docs/onboarding.md` post-PR#4. A bare unprefixed example is a fidelity bug.
+   - **Positive**: the "Your First Task" example MUST be prefixed with `/oj:cycle ` (e.g., `/oj:cycle I'm adding rate limiting to the public REST API of our Node/Express auth service. Expected ~10,000 requests per minute, with one Redis instance available. What should I think about before implementing?`) — matches the live `oj-claude/docs/onboarding.md`. A bare unprefixed example is a fidelity bug.
    - Triage model explained (4 criteria, 0-1/2-3/4 scoring)
    - Common mistakes section exists
    - Links to next steps (WHY.md, CLAUDE.md, agents/index.md)
